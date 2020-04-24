@@ -2,7 +2,7 @@
 ## Overview
 Pycom WiPy 3.0 project to control a 9V Gardena valve via MQTT
 
-- Based on [Pycom WiPy 3.0] (https://docs.pycom.io/datasheets/development/wipy3/) (ESP32) running Micropython
+- Based on [Pycom WiPy 3.0](https://docs.pycom.io/datasheets/development/wipy3/) (ESP32) running Micropython
 - Listen to MQTT commands
 - Sends status via MQTT
 - Uses h-bridge circuit to generate switching signal for valve
