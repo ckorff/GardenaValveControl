@@ -1,3 +1,10 @@
+#------------------------------------------------------
+# GardenaValveControl
+# Version 1.0
+# Author: Christian Korff
+# email: ckorff@web.de
+#------------------------------------------------------
+
 from mqtt import MQTTClient
 from machine import Pin
 
