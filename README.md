@@ -1,11 +1,11 @@
-Gardena Valve Control
+# Gardena Valve Control
 ## Overview
 Pycom WiPy 3.0 project to control a 9V Gardena valve via MQTT
 
-	- Based on [Pycom WiPy 3.0](https://docs.pycom.io/datasheets/development/wipy3/) (ESP32) running Micropython
-	- Listen to MQTT commands
-	- Sends status via MQTT
-	- Uses h-bridge circuit to generate switching signal for valve
+- Based on [Pycom WiPy 3.0] (https://docs.pycom.io/datasheets/development/wipy3/) (ESP32) running Micropython
+- Listen to MQTT commands
+- Sends status via MQTT
+- Uses h-bridge circuit to generate switching signal for valve
 
 ## Description
 The German Manufacturing Company [Gardena](https://en.wikipedia.org/wiki/Gardena_(company)) is producing garden equipment including controller based watering systems. The main downside of the entry-level 9V series is the missing remote control capability.
@@ -32,5 +32,3 @@ Feature upgrade release
 
 ## Version 2.2
 - Implements a REST API to control the valves (no authentication)
-
-
