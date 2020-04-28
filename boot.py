@@ -1,10 +1,3 @@
-#------------------------------------------------------
-# GardenaValveControl
-# Version 1.0
-# Author: Christian Korff
-# email: ckorff@web.de
-#------------------------------------------------------
-
 import machine
 from network import WLAN
 import pycom

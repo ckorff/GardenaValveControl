@@ -20,6 +20,11 @@ Initial test release for prototype.
 - simplified command structure (pure txt string)
 - simplified status update structure (pure txt string)
 
+## Version 1.1
+Enhanced stability release
+- Introduced a watchdog timer (WDT)
+- Introduced syslog capability for long time monitoring
+
 ## Version 2.0
 Initial production release
 - Drives two independent channels to control two valves
