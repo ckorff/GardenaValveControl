@@ -1,99 +1,168 @@
 #------------------------------------------------------
-# GardenaValveControl
-# Version 1.1
-# Author: Christian Korff
-# email: ckorff@web.de
+# Define Class for Ventil
 #------------------------------------------------------
+class valve:
+    def __init__(self, PinON, PinOFF):
+        self._status = False
+        self._PinON = Pin(PinON, mode=Pin.OUT, pull=Pin.PULL_UP)
+        self._PinOFF = Pin(PinOFF, mode=Pin.OUT, pull=Pin.PULL_UP)
+        self._statusColor = (0x000000)
+        self._needUpdate = True
 
-from mqtt import MQTTClient
-from machine import Pin
-from machine import WDT
-import usyslog
+    def setValveStatus(self, status):
+        self._status = status
+        print("Valve to Status " + str(self._status))
+
+    def getValveStatus(self):
+        return self._status
+    
+    def set_needUpdate(self, state = True):
+        self._needUpdate = state
+    
+    def get_needUpdate(self):
+        return self._needUpdate
+    
+    def set_statusColor(self,color):
+        self._statusColor = color
+
+    def get_statusColor(self):
+        return self._statusColor    
+    
+    def openValve(self):
+        self._PinON.value(1)
+        pycom.rgbled(0x00FF00)
+        time.sleep(0.250)
+        self._PinON.value(0)
+        pycom.rgbled(0x001100)
+
+    def closeValve(self):
+        self._PinOFF.value(1)
+        pycom.rgbled(0xFF0000)
+        time.sleep(0.0625)
+        self._PinOFF.value(0)
+        pycom.rgbled(0x110000)
+    
+    def updateValve(self):
+        if self._status == True:
+            self.openValve()
+        elif self._status == False:
+            self.closeValve()
+        self._needUpdate = False
 
 #------------------------------------------------------
-# Initialize Syslog Server & send boot message
+# Initialize Valve 1 as GardenaValve1
 #------------------------------------------------------
-SYSLOG_SERVER_IP = '192.168.1.150'
-s = usyslog.UDPClient(ip=SYSLOG_SERVER_IP)
-s.info('GardenaValveControl:Booting Version 1.1')
+GardenaValve1 = valve(PinON = 'P7', PinOFF = 'P6')
+GardenaValve2 = valve(PinON = 'P5', PinOFF = 'P4')
 
 #------------------------------------------------------
-# Declare global variable
+# Define global variables
 #------------------------------------------------------
-valve_status = ""
-valve_desired_status = b'OFF'
+SecondInterruptHappened = False
 
 #------------------------------------------------------
-# Declare physical pin's
+# Initialize and configure subroutine for 1 second timer
 #------------------------------------------------------
-p_ON = Pin('P6', mode=Pin.OUT, pull=Pin.PULL_UP)
-p_OFF = Pin('P7', mode=Pin.OUT, pull=Pin.PULL_UP)
-p_ON.value(0)
-p_OFF.value(0)
+def seconds_handler(alarm):
+   global SecondInterruptHappened
+   SecondInterruptHappened = True   
 
+#------------------------------------------------------
+# Instantiate object for Second Timer
+#------------------------------------------------------
+everySecond = Timer.Alarm(seconds_handler, 1, periodic=True)
+        
 #------------------------------------------------------
 # MQTT subroutine to handle incoming messages
 # on subscribed topics
 #------------------------------------------------------
 def sub_cb(topic, msg):
-   global valve_desired_status
-   valve_desired_status = (msg)
-
-
-#------------------------------------------------------
-# Subroutine to open valve
-#------------------------------------------------------
-def sub_open_valve():
-    global valve_status
-    p_ON.value(1)
-    pycom.rgbled(0x00FF00)
-    time.sleep(0.250)
-    p_ON.value(0)
-    pycom.rgbled(0x000000)
-    valve_status = b'ON'
-
-#------------------------------------------------------
-# Subroutine to close valve
-#------------------------------------------------------
-def sub_close_valve():
-    global valve_status
-    p_OFF.value(1)
-    pycom.rgbled(0xFF0000)
-    time.sleep(0.0625)
-    p_OFF.value(0)
-    pycom.rgbled(0x000000)
-    valve_status = b'OFF'
-
+    print('MQTT empfangen')
+    try:
+        receivedMessage = ujson.loads(msg)
+        if str(receivedMessage['device']) == DeviceID:
+            receivedMessage['valve'] = int(receivedMessage['valve'])
+            receivedMessage['status'] = bool(receivedMessage['status'])
+            if receivedMessage['valve'] == 1:
+                GardenaValve1.setValveStatus(receivedMessage['status'])
+                GardenaValve1.set_needUpdate(True)
+                print('Es wurde eine Nachricht für das Ventil {} empfangen'.format(str(receivedMessage['valve'])))
+            if receivedMessage['valve'] == 2:
+                GardenaValve2.setValveStatus(receivedMessage['status'])
+                GardenaValve2.set_needUpdate(True)
+                print('Es wurde eine Nachricht für das Ventil {} empfangen'.format(str(receivedMessage['valve'])))
+            return
+        else:
+            print('not for me')
+            return
+    except:
+        print('wrong message format received')
+        print(msg)
+        return
+    
 #------------------------------------------------------
 # Initialize watchdog counter to ensure stability
 #------------------------------------------------------
-wdt = WDT(timeout=2000)  # enable it with a timeout of 2 second
+#wdt = WDT(timeout=2000)  # enable it with a timeout of 2 second
 
 #------------------------------------------------------
 # Initialize MQTT client and subscribe to Cmd topic
 #------------------------------------------------------
-client = MQTTClient("PyComGardena", "192.168.1.151",port=1883)
+MQTT_Server = ConfigData['MQTT_Server']
+MQTT_Port = int(ConfigData['MQTT_Port'])
+MQTT_Status_Topic = ConfigData['MQTT_Status_Topic']
+MQTT_CMD_Topic = ConfigData['MQTT_CMD_Topic']
+
+client = MQTTClient(MQTTDeviceID, MQTT_Server,port=MQTT_Port)
 client.set_callback(sub_cb)
 client.connect()
-client.subscribe(topic="/Keller/PyComGardena/Cmd")
-client.publish(topic="/Keller/PyComGardena/Cmd", msg=b'OFF', retain=True, qos=1)
+
+#------------------------------------------------------
+# Publish retain "off" message & subscribe to CMD topic
+#------------------------------------------------------
+msg = {
+        'device': '30aea478eb20',
+        'valve': '1',
+        'status': False
+       }
+
+client.publish(MQTT_CMD_Topic, ujson.dumps(msg), retain=True, qos=1)
+client.subscribe(MQTT_CMD_Topic)
 
 #------------------------------------------------------
 # Starting main program
 #------------------------------------------------------
-while True:
-    loop_counter = 1
-    while loop_counter <= 20:
-        client.check_msg()
-        if valve_status != valve_desired_status:
-            if valve_desired_status == b'ON': sub_open_valve()
-            if valve_desired_status == b'OFF': sub_close_valve()
+while 1:
+    # construct MQTT status message
+    MQTTstatusMessage = {
+                            'valve1': GardenaValve1.getValveStatus(),
+                            'valve2': GardenaValve2.getValveStatus(),
+                            'device': DeviceID
+                        }
+    
+    # run code if any valve status needs to be updated
+    if GardenaValve1.get_needUpdate() == True:
+        GardenaValve1.updateValve()
+        client.publish(MQTT_Status_Topic, ujson.dumps(MQTTstatusMessage))
 
-        if loop_counter == 1:
-            client.publish(topic="/Keller/PyComGardena/Status", msg=valve_status)
-            pycom.rgbled(0x000011)
-        if loop_counter == 11:
-            pycom.rgbled(0x000000)
-        loop_counter +=1
-        wdt.feed()
-        time.sleep(0.1)
+    if GardenaValve2.get_needUpdate() == True:
+        GardenaValve2.updateValve()
+        client.publish(MQTT_Status_Topic, ujson.dumps(MQTTstatusMessage))
+    
+    # run code every second
+    if SecondInterruptHappened == True:
+        if GardenaValve1.get_statusColor() == 0:
+            if GardenaValve1.getValveStatus() == True:
+                GardenaValve1.set_statusColor(0x001100)
+            else:
+                GardenaValve1.set_statusColor(0x110000)
+        else:
+            GardenaValve1.set_statusColor(0)
+        pycom.rgbled(GardenaValve1.get_statusColor())
+        client.publish(MQTT_Status_Topic, ujson.dumps(MQTTstatusMessage))
+        SecondInterruptHappened = False
+    
+    gc.collect()        # collect garbage to safe heap memory
+    #wdt.feed()          # feed watchdog timer for resiliancy; reboot if not done within 2 seconds
+    client.check_msg()  #check for incoming MQTT messages
+    time.sleep(0.01)

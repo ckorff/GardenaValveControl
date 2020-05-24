@@ -1,0 +1,19 @@
+{
+    
+    "Devices": {
+    "30aea478eb20": "192.168.1.204"
+    },
+    
+    "subnet_mask": "255.255.255.0",
+    "gateway": "192.168.1.1",
+    "DNS_server": "192.168.1.1",
+
+    "MQTT_Server": "192.168.1.151",
+    "MQTT_Port": "1883",
+    "MQTT_Status_Topic": "/Keller/PyComGardena/Status",
+    "MQTT_CMD_Topic": "/Keller/PyComGardena/CMD",
+    "SYSLOG_SERVER_IP": "192.168.1.150",
+    "SSID": "SPN",
+    "WLANPSWD": "delphine2205"
+
+}
