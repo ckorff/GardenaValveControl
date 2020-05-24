@@ -14,7 +14,7 @@ if machine.reset_cause() != machine.SOFT_RESET:
 
 if not wlan.isconnected():
     # change the line below to match your network ssid, security and password
-    wlan.connect('SPN', auth=(WLAN.WPA2, 'delphine2205'), timeout=5000)
+    wlan.connect('your_ssid', auth=(WLAN.WPA2, 'your_password'), timeout=5000)
     while not wlan.isconnected():
         machine.idle() # save power while waiting
 
