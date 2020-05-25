@@ -13,7 +13,7 @@
     "MQTT_Status_Topic": "/Keller/PyComGardena/Status",
     "MQTT_CMD_Topic": "/Keller/PyComGardena/CMD",
     "SYSLOG_SERVER_IP": "192.168.1.150",
-    "SSID": "SPN",
-    "WLANPSWD": "delphine2205"
+    "SSID": "your_ssid",
+    "WLANPSWD": "your_password"
 
 }
