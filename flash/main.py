@@ -1,7 +1,7 @@
 from gardenavalvecontrol import valve
 
 #------------------------------------------------------
-# Initialize Valve 1.1 as GardenaValve1
+# Initialize Valve 1 as GardenaValve1
 #------------------------------------------------------
 GardenaValve1 = valve(PinON = 'P7', PinOFF = 'P6')
 GardenaValve2 = valve(PinON = 'P5', PinOFF = 'P4')
